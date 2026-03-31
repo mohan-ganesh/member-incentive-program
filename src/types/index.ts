@@ -21,20 +21,55 @@ export interface User {
   streakDays: number;
   badges: Badge[];
   avatarUrl?: string;
+  /** The employer group this member belongs to (if any) */
+  employerGroupId?: string;
+}
+
+// --- Employer Group ---
+export interface EmployerGroup {
+  id: string;
+  name: string;
+  description?: string;
+  industry?: string;
+  contactEmail?: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 // --- Program ---
 export type ProgramStatus = 'draft' | 'active' | 'paused' | 'completed';
 
+/**
+ * Discriminates the regulatory environment the program operates under.
+ * - commercial: Employer-sponsored / individual ACA plans (ERISA / ACA caps)
+ * - medicare:   Medicare Advantage or Part D plans (CMS Star Ratings / HEDIS)
+ * - medicaid:   State Medicaid / CHIP plans (state-specific rules)
+ */
+export type ProgramType = 'commercial' | 'medicare' | 'medicaid';
+
+/** CMS / ACA regulatory incentive caps — enforced per program type */
+export interface IncentiveCap {
+  /** Max points value per single activity occurrence */
+  perActivityMaxValue?: number;
+  /** Max cumulative incentive value per member per year (in dollar-equivalent) */
+  annualMaxValue?: number;
+  /** Regulatory note shown to admins for awareness */
+  regulatoryNote?: string;
+}
+
 export interface Program {
   id: string;
   name: string;
   description: string;
+  programType: ProgramType;
   startDate: string;
   endDate: string;
   status: ProgramStatus;
   eligibility: EligibilityCriteria;
   maxPoints: PointsCap;
+  incentiveCap?: IncentiveCap;
+  /** HEDIS / quality measure codes this program contributes to */
+  hedisAlignments?: string[];
   activities: string[]; // activity IDs
   createdAt: string;
   updatedAt: string;
@@ -45,6 +80,11 @@ export interface EligibilityCriteria {
   maxAge?: number;
   planTypes?: string[];
   geographies?: string[];
+  /**
+   * If set, only members belonging to one of these employer groups
+   * are eligible for the program. Empty / undefined = open to all.
+   */
+  employerGroupIds?: string[];
 }
 
 export interface PointsCap {
@@ -201,4 +241,22 @@ export interface ProgramAnalytics {
   participationRate: number;
   dailyActivityData: { date: string; activities: number; points: number }[];
   categoryBreakdown: { category: string; count: number }[];
+}
+
+// --- Quality & Care Gaps ---
+export interface HEDISMeasure {
+  id: string;
+  code: string; // e.g., "BCS" (Breast Cancer Screening), "COL" (Colorectal Cancer Screening)
+  name: string;
+  description: string;
+}
+
+export interface CareGap {
+  id: string;
+  memberId: string;
+  measureId: string; // references HEDISMeasure.id
+  status: 'open' | 'closed';
+  identifiedAt: string;
+  closedAt?: string;
+  associatedActivityId?: string; // The activity that, when completed, closes this gap
 }

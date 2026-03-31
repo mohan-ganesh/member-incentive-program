@@ -1,32 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { Select } from '../../components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '../../components/ui/dialog';
 import { Plus, Shield, Zap, Code } from 'lucide-react';
-import type { RuleActionType, RuleConditionOperator } from '../../types';
-
-const operatorLabels: Record<RuleConditionOperator, string> = {
-  eq: 'Equals (=)',
-  gt: 'Greater Than (>)',
-  gte: 'Greater or Equal (>=)',
-  lt: 'Less Than (<)',
-  lte: 'Less or Equal (<=)',
-  in: 'In List',
-  between: 'Between',
-};
+import type { RuleActionType } from '../../types';
 
 const actionLabels: Record<RuleActionType, string> = {
   award_points: 'Award Points',
@@ -36,54 +15,9 @@ const actionLabels: Record<RuleActionType, string> = {
 };
 
 export function AdminRules() {
-  const { state, dispatch } = useApp();
-  const [showCreate, setShowCreate] = useState(false);
+  const navigate = useNavigate();
+  const { state } = useApp();
   const [showJson, setShowJson] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    programId: state.programs[0]?.id || '',
-    conditionField: 'user.streakDays',
-    conditionOperator: 'gte' as RuleConditionOperator,
-    conditionValue: '7',
-    actionType: 'award_bonus' as RuleActionType,
-    actionValue: '200',
-    actionDescription: '',
-    priority: '5',
-  });
-
-  function handleCreate() {
-    if (!formData.name || !formData.programId) return;
-    dispatch({
-      type: 'CREATE_RULE',
-      rule: {
-        name: formData.name,
-        description: formData.description,
-        programId: formData.programId,
-        conditions: [
-          {
-            field: formData.conditionField,
-            operator: formData.conditionOperator,
-            value: isNaN(Number(formData.conditionValue))
-              ? formData.conditionValue
-              : Number(formData.conditionValue),
-          },
-        ],
-        actions: [
-          {
-            type: formData.actionType,
-            value: isNaN(Number(formData.actionValue))
-              ? formData.actionValue
-              : Number(formData.actionValue),
-            description: formData.actionDescription,
-          },
-        ],
-        priority: parseInt(formData.priority) || 5,
-        isActive: true,
-      },
-    });
-    setShowCreate(false);
-  }
 
   return (
     <div className="space-y-6">
@@ -95,7 +29,7 @@ export function AdminRules() {
             Rules are defined as configurable JSON and evaluated in priority order.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={() => navigate('/admin/rules/new')}>
           <Plus className="h-4 w-4 mr-2" />
           New Rule
         </Button>
@@ -191,136 +125,6 @@ export function AdminRules() {
         ))}
       </div>
 
-      {/* Create dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create New Rule</DialogTitle>
-            <DialogDescription>
-              Define a rule with conditions and actions. Rules are evaluated as configurable JSON.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label>Rule Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., 14-Day Streak Bonus"
-              />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe what this rule does..."
-              />
-            </div>
-            <div>
-              <Label>Program</Label>
-              <Select
-                value={formData.programId}
-                onChange={(e) => setFormData({ ...formData, programId: e.target.value })}
-              >
-                {state.programs.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="bg-zinc-50 rounded-lg p-3 space-y-3">
-              <p className="text-xs font-medium text-zinc-500 uppercase">Condition</p>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">Field</Label>
-                  <Select
-                    value={formData.conditionField}
-                    onChange={(e) => setFormData({ ...formData, conditionField: e.target.value })}
-                  >
-                    <option value="event.status">event.status</option>
-                    <option value="user.streakDays">user.streakDays</option>
-                    <option value="user.totalPointsEarned">user.totalPointsEarned</option>
-                    <option value="user.level">user.level</option>
-                    <option value="user.totalActivities">user.totalActivities</option>
-                    <option value="user.dailyPoints">user.dailyPoints</option>
-                    <option value="activity.category">activity.category</option>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Operator</Label>
-                  <Select
-                    value={formData.conditionOperator}
-                    onChange={(e) => setFormData({ ...formData, conditionOperator: e.target.value as RuleConditionOperator })}
-                  >
-                    {Object.entries(operatorLabels).map(([k, v]) => (
-                      <option key={k} value={k}>{v}</option>
-                    ))}
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Value</Label>
-                  <Input
-                    value={formData.conditionValue}
-                    onChange={(e) => setFormData({ ...formData, conditionValue: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-emerald-50 rounded-lg p-3 space-y-3">
-              <p className="text-xs font-medium text-zinc-500 uppercase">Action</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Type</Label>
-                  <Select
-                    value={formData.actionType}
-                    onChange={(e) => setFormData({ ...formData, actionType: e.target.value as RuleActionType })}
-                  >
-                    {Object.entries(actionLabels).map(([k, v]) => (
-                      <option key={k} value={k}>{v}</option>
-                    ))}
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Value</Label>
-                  <Input
-                    value={formData.actionValue}
-                    onChange={(e) => setFormData({ ...formData, actionValue: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs">Description</Label>
-                <Input
-                  value={formData.actionDescription}
-                  onChange={(e) => setFormData({ ...formData, actionDescription: e.target.value })}
-                  placeholder="Optional description..."
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label>Priority (lower = evaluated first)</Label>
-              <Input
-                type="number"
-                value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreate} disabled={!formData.name}>
-              Create Rule
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

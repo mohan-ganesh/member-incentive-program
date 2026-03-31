@@ -15,6 +15,7 @@ import type {
   RedemptionStatus,
   LedgerEntryType,
   ProgramStatus,
+  EmployerGroup,
 } from '../types';
 import {
   MOCK_USERS,
@@ -26,6 +27,7 @@ import {
   MOCK_REDEMPTIONS,
   MOCK_RULES,
   MOCK_NOTIFICATIONS,
+  MOCK_EMPLOYER_GROUPS,
 } from '../data/mockData';
 import { evaluateRules, getDailyPoints, getMonthlyPoints } from '../engine/rulesEngine';
 
@@ -41,6 +43,7 @@ interface AppState {
   redemptions: Redemption[];
   rules: Rule[];
   notifications: Notification[];
+  employerGroups: EmployerGroup[];
   viewMode: 'member' | 'admin';
 }
 
@@ -57,8 +60,11 @@ type AppAction =
   | { type: 'CREATE_PROGRAM'; program: Omit<Program, 'id' | 'createdAt' | 'updatedAt'> }
   | { type: 'UPDATE_PROGRAM_STATUS'; programId: string; status: ProgramStatus }
   | { type: 'CREATE_ACTIVITY'; activity: Omit<Activity, 'id'> }
+  | { type: 'ASSIGN_ACTIVITY_TO_PROGRAM'; activityId: string; programId: string }
+  | { type: 'REMOVE_ACTIVITY_FROM_PROGRAM'; activityId: string }
   | { type: 'CREATE_RULE'; rule: Omit<Rule, 'id' | 'createdAt'> }
-  | { type: 'ADD_NOTIFICATION'; notification: Omit<Notification, 'id'> };
+  | { type: 'ADD_NOTIFICATION'; notification: Omit<Notification, 'id'> }
+  | { type: 'CREATE_EMPLOYER_GROUP'; group: Omit<EmployerGroup, 'id' | 'createdAt'> };
 
 const initialState: AppState = {
   currentUser: MOCK_USERS[0],
@@ -71,6 +77,7 @@ const initialState: AppState = {
   redemptions: MOCK_REDEMPTIONS,
   rules: MOCK_RULES,
   notifications: MOCK_NOTIFICATIONS,
+  employerGroups: MOCK_EMPLOYER_GROUPS,
   viewMode: 'member',
 };
 
@@ -383,6 +390,61 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_NOTIFICATION': {
       const newNotif: Notification = { ...action.notification, id: uuidv4() };
       return { ...state, notifications: [newNotif, ...state.notifications] };
+    }
+
+    case 'ASSIGN_ACTIVITY_TO_PROGRAM': {
+      const act = state.activities.find((a) => a.id === action.activityId);
+      if (!act) return state;
+      const oldProgramId = act.programId;
+
+      return {
+        ...state,
+        // Update the activity's programId
+        activities: state.activities.map((a) =>
+          a.id === action.activityId ? { ...a, programId: action.programId } : a
+        ),
+        // Add to new program's activities list, remove from old
+        programs: state.programs.map((p) => {
+          if (p.id === action.programId) {
+            return p.activities.includes(action.activityId)
+              ? p
+              : { ...p, activities: [...p.activities, action.activityId], updatedAt: new Date().toISOString() };
+          }
+          if (p.id === oldProgramId) {
+            return {
+              ...p,
+              activities: p.activities.filter((id) => id !== action.activityId),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return p;
+        }),
+      };
+    }
+
+    case 'REMOVE_ACTIVITY_FROM_PROGRAM': {
+      const act = state.activities.find((a) => a.id === action.activityId);
+      if (!act) return state;
+      return {
+        ...state,
+        activities: state.activities.map((a) =>
+          a.id === action.activityId ? { ...a, programId: '', isActive: false } : a
+        ),
+        programs: state.programs.map((p) =>
+          p.id === act.programId
+            ? { ...p, activities: p.activities.filter((id) => id !== action.activityId), updatedAt: new Date().toISOString() }
+            : p
+        ),
+      };
+    }
+
+    case 'CREATE_EMPLOYER_GROUP': {
+      const newGroup: EmployerGroup = {
+        ...action.group,
+        id: uuidv4(),
+        createdAt: new Date().toISOString(),
+      };
+      return { ...state, employerGroups: [...state.employerGroups, newGroup] };
     }
 
     default:

@@ -49,8 +49,18 @@ export function Activities() {
   const [confirmActivity, setConfirmActivity] = useState<Activity | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const activePrograms = state.programs.filter((p) => p.status === 'active');
-  const programActivities = state.activities.filter((a) => a.isActive);
+  // Employer-group-aware eligibility: only show programs the current member qualifies for
+  const activePrograms = state.programs.filter((p) => {
+    if (p.status !== 'active') return false;
+    const groupFilter = p.eligibility.employerGroupIds;
+    if (!groupFilter || groupFilter.length === 0) return true; // open to all
+    return !!state.currentUser.employerGroupId && groupFilter.includes(state.currentUser.employerGroupId);
+  });
+
+  const eligibleProgramIds = new Set(activePrograms.map((p) => p.id));
+  const programActivities = state.activities.filter(
+    (a) => a.isActive && eligibleProgramIds.has(a.programId)
+  );
   const userEvents = getUserEvents();
 
   const categories: ActivityCategory[] = [

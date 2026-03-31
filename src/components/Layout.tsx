@@ -12,6 +12,7 @@ import {
   BookOpen,
   Shield,
   ChevronDown,
+  Building2,
 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -30,6 +31,7 @@ const adminNav = [
   { to: '/admin/programs', label: 'Programs', icon: BookOpen },
   { to: '/admin/activities', label: 'Activities', icon: Activity },
   { to: '/admin/rules', label: 'Rules Engine', icon: Shield },
+  { to: '/admin/employer-groups', label: 'Employer Groups', icon: Building2 },
   { to: '/admin/members', label: 'Members', icon: Users },
   { to: '/admin/redemptions', label: 'Redemptions', icon: Gift },
 ];
@@ -68,10 +70,9 @@ export function Layout() {
               to={to}
               end={to === '/' || to === '/admin'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
                 }`
               }
             >
@@ -104,7 +105,7 @@ export function Layout() {
         <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-between px-6">
           <div>
             <h2 className="text-sm text-zinc-500">
-              {state.viewMode === 'admin' ? 'Admin Panel' : 'Member Portal'}
+              {state.viewMode === 'admin' ? 'Admin Panel - Admin View' : 'Member Portal - Member View'}
             </h2>
           </div>
 
@@ -120,36 +121,40 @@ export function Layout() {
 
             {/* Notifications */}
             <div className="relative">
-              <button
-                className="relative p-2 rounded-lg hover:bg-zinc-100 transition-colors"
-                onClick={() => setNotifOpen(!notifOpen)}
-              >
-                <Bell className="h-5 w-5 text-zinc-600" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
+              {state.viewMode === 'member' && (
+                <button
+                  className="relative p-2 rounded-lg hover:bg-zinc-100 transition-colors"
+                  onClick={() => setNotifOpen(!notifOpen)}
+                >
+                  <Bell className="h-5 w-5 text-zinc-600" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
               {notifOpen && <NotificationDropdown onClose={() => setNotifOpen(false)} />}
             </div>
 
             {/* User menu */}
             <div className="relative">
-              <button
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 transition-colors"
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-              >
-                <div
-                  className={`h-8 w-8 rounded-full ${levelColors[state.currentUser.level]} flex items-center justify-center text-white text-xs font-bold`}
+              {state.viewMode === 'member' && (
+                <button
+                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 transition-colors"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
                 >
-                  {state.currentUser.name.charAt(0)}
-                </div>
-                <span className="text-sm font-medium text-zinc-700">
-                  {state.currentUser.name}
-                </span>
-                <ChevronDown className="h-3 w-3 text-zinc-400" />
-              </button>
+                  <div
+                    className={`h-8 w-8 rounded-full ${levelColors[state.currentUser.level]} flex items-center justify-center text-white text-xs font-bold`}
+                  >
+                    {state.currentUser.name.charAt(0)}
+                  </div>
+                  <span className="text-sm font-medium text-zinc-700">
+                    {state.currentUser.name}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-zinc-400" />
+                </button>
+              )}
               {userMenuOpen && <UserMenuDropdown onClose={() => setUserMenuOpen(false)} />}
             </div>
           </div>
@@ -190,9 +195,8 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
             notifications.map((n) => (
               <div
                 key={n.id}
-                className={`p-3 border-b border-zinc-100 cursor-pointer hover:bg-zinc-50 ${
-                  !n.read ? 'bg-emerald-50/50' : ''
-                }`}
+                className={`p-3 border-b border-zinc-100 cursor-pointer hover:bg-zinc-50 ${!n.read ? 'bg-emerald-50/50' : ''
+                  }`}
                 onClick={() => dispatch({ type: 'READ_NOTIFICATION', notificationId: n.id })}
               >
                 <p className="text-sm font-medium">{n.title}</p>
@@ -223,9 +227,8 @@ function UserMenuDropdown({ onClose }: { onClose: () => void }) {
         {members.map((u) => (
           <button
             key={u.id}
-            className={`w-full px-3 py-2 text-left text-sm hover:bg-zinc-50 flex items-center gap-2 ${
-              u.id === state.currentUser.id ? 'bg-emerald-50 text-emerald-700' : 'text-zinc-700'
-            }`}
+            className={`w-full px-3 py-2 text-left text-sm hover:bg-zinc-50 flex items-center gap-2 ${u.id === state.currentUser.id ? 'bg-emerald-50 text-emerald-700' : 'text-zinc-700'
+              }`}
             onClick={() => {
               dispatch({ type: 'SWITCH_USER', userId: u.id });
               onClose();

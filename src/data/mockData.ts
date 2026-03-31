@@ -9,7 +9,39 @@ import type {
   Rule,
   Notification,
   Badge,
+  EmployerGroup,
 } from '../types';
+
+// --- Employer Groups ---
+export const MOCK_EMPLOYER_GROUPS: EmployerGroup[] = [
+  {
+    id: 'eg-1',
+    name: 'Acme Corporation',
+    description: 'Global technology and manufacturing conglomerate enrolled in the Healthy Living program.',
+    industry: 'Technology',
+    contactEmail: 'benefits@acmecorp.com',
+    isActive: true,
+    createdAt: '2024-10-01T08:00:00Z',
+  },
+  {
+    id: 'eg-2',
+    name: 'MediTech Solutions',
+    description: 'Healthcare IT company with a focus on employee preventive care.',
+    industry: 'Healthcare IT',
+    contactEmail: 'hr@meditech.com',
+    isActive: true,
+    createdAt: '2024-11-15T08:00:00Z',
+  },
+  {
+    id: 'eg-3',
+    name: 'RetailCo National',
+    description: 'Large retail employer running a step-challenge program for all staff.',
+    industry: 'Retail',
+    contactEmail: 'wellness@retailco.com',
+    isActive: true,
+    createdAt: '2024-12-01T08:00:00Z',
+  },
+];
 
 // --- Badges ---
 export const ALL_BADGES: Badge[] = [
@@ -37,6 +69,7 @@ export const MOCK_USERS: User[] = [
     totalPointsRedeemed: 500,
     streakDays: 12,
     badges: [ALL_BADGES[0], ALL_BADGES[1], ALL_BADGES[2]],
+    employerGroupId: 'eg-1',
   },
   {
     id: 'user-2',
@@ -52,6 +85,7 @@ export const MOCK_USERS: User[] = [
     totalPointsRedeemed: 200,
     streakDays: 5,
     badges: [ALL_BADGES[0]],
+    employerGroupId: 'eg-2',
   },
   {
     id: 'user-3',
@@ -67,6 +101,7 @@ export const MOCK_USERS: User[] = [
     totalPointsRedeemed: 0,
     streakDays: 2,
     badges: [],
+    employerGroupId: 'eg-3',
   },
   {
     id: 'admin-1',
@@ -91,6 +126,7 @@ export const MOCK_PROGRAMS: Program[] = [
     id: 'prog-1',
     name: 'Healthy Living 2025',
     description: 'A comprehensive wellness program rewarding members for healthy behaviors including fitness, nutrition, and preventive care.',
+    programType: 'commercial',
     startDate: '2025-01-01',
     endDate: '2025-12-31',
     status: 'active',
@@ -99,6 +135,7 @@ export const MOCK_PROGRAMS: Program[] = [
       maxAge: 65,
       planTypes: ['basic', 'premium'],
       geographies: ['US-CA', 'US-NY', 'US-TX'],
+      // Open to all employer groups (no restriction)
     },
     maxPoints: { daily: 200, monthly: 3000, lifetime: 25000 },
     activities: ['act-1', 'act-2', 'act-3', 'act-4', 'act-5', 'act-6', 'act-8', 'act-9', 'act-10', 'act-11', 'act-12', 'act-13', 'act-14', 'act-15', 'act-16', 'act-17'],
@@ -109,16 +146,37 @@ export const MOCK_PROGRAMS: Program[] = [
     id: 'prog-2',
     name: 'Step Challenge Q1',
     description: 'Quarterly step challenge — earn bonus points for meeting daily step goals.',
+    programType: 'commercial',
     startDate: '2025-01-01',
     endDate: '2025-03-31',
     status: 'completed',
     eligibility: {
       planTypes: ['basic', 'premium'],
+      // Restricted to RetailCo National only
+      employerGroupIds: ['eg-3'],
     },
     maxPoints: { daily: 100, monthly: 2000, lifetime: 5000 },
     activities: ['act-7'],
     createdAt: '2024-12-15T10:00:00Z',
     updatedAt: '2025-04-01T00:00:00Z',
+  },
+  {
+    id: 'prog-3',
+    name: 'Tech Workforce Wellness',
+    description: 'Exclusive program for Acme Corporation and MediTech Solutions employees. Focuses on preventive screenings and mental wellness.',
+    programType: 'commercial',
+    startDate: '2025-03-01',
+    endDate: '2025-12-31',
+    status: 'active',
+    eligibility: {
+      planTypes: ['basic', 'premium'],
+      // Restricted to two employer groups
+      employerGroupIds: ['eg-1', 'eg-2'],
+    },
+    maxPoints: { daily: 300, monthly: 4000, lifetime: 30000 },
+    activities: ['act-8', 'act-12', 'act-14', 'act-15'],
+    createdAt: '2025-02-01T10:00:00Z',
+    updatedAt: '2025-03-01T00:00:00Z',
   },
 ];
 

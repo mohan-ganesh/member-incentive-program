@@ -1,7 +1,7 @@
 import { useApp } from '../../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Trophy, Flame, Wallet } from 'lucide-react';
+import { Trophy, Flame, Wallet, Building2 } from 'lucide-react';
 import type { MemberLevel } from '../../types';
 
 const levelBadgeVariant: Record<MemberLevel, 'default' | 'secondary' | 'warning' | 'info'> = {
@@ -32,6 +32,7 @@ export function AdminMembers() {
               <thead>
                 <tr className="border-b border-zinc-200">
                   <th className="text-left py-3 px-4 font-medium text-zinc-500">Member</th>
+                  <th className="text-left py-3 px-4 font-medium text-zinc-500">Employer Group</th>
                   <th className="text-left py-3 px-4 font-medium text-zinc-500">Plan</th>
                   <th className="text-left py-3 px-4 font-medium text-zinc-500">Level</th>
                   <th className="text-left py-3 px-4 font-medium text-zinc-500">Points Earned</th>
@@ -42,7 +43,11 @@ export function AdminMembers() {
                 </tr>
               </thead>
               <tbody>
-                {members.map((member) => (
+                {members.map((member) => {
+                    const group = member.employerGroupId
+                      ? state.employerGroups.find((g) => g.id === member.employerGroupId)
+                      : undefined;
+                    return (
                   <tr key={member.id} className="border-b border-zinc-100 hover:bg-zinc-50">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
@@ -54,6 +59,16 @@ export function AdminMembers() {
                           <p className="text-xs text-zinc-500">{member.email}</p>
                         </div>
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {group ? (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Building2 className="h-3.5 w-3.5 text-violet-500" />
+                          <span className="font-medium text-violet-700">{group.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-zinc-400">—</span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant="outline" className="capitalize">
@@ -100,7 +115,8 @@ export function AdminMembers() {
                       {new Date(member.joinedAt).toLocaleDateString()}
                     </td>
                   </tr>
-                ))}
+                    );
+                  })}
               </tbody>
             </table>
           </div>
